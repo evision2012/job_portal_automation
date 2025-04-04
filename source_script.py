@@ -22,7 +22,7 @@ def extract_email(text):
 
 
 def extract_phone(text):
-    return "NO_PHONE"
+    return "New number"
 
 
 
