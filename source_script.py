@@ -1,6 +1,9 @@
 import os
 import pandas as pd
 import PyPDF2
+import re
+import rapidfuzz import process
+import json
 
 from mylib import city_by_states, is_same
 
@@ -46,7 +49,54 @@ def extract_stream(text):
 
 
 
+#  Load college list from JSON file
+with open('D:\Vs - code\Job_Portal_Automation\Job_Portal_Automation\Data_Files\college.json', 'r', encoding='utf-8') as f:
+    known_colleges = json.load(f)
+
+#  Fuzzy matching function
+def match_with_known_colleges(candidate):
+    if not candidate or candidate == "NO_COLLEGE":
+        return "NO_COLLEGE"
+    match = process.extractOne(candidate, known_colleges, score_cutoff=80)
+    if match:
+        return match[0]
+    return candidate
+
+#  Main function to extract college name from resume text
 def extract_college(text):
+    text = text.replace('\r', ' ').replace('\t', ' ')
+    lines = text.split('\n')
+
+    # Find EDUCATION/ACADEMICS section
+    edu_lines = []
+    found = False
+    for line in lines:
+        if re.search(r'EDUCATION|ACADEMICS', line, re.IGNORECASE):
+            found = True
+            continue
+        if found:
+            if re.search(r'EXPERIENCE|PROJECT|SKILL|CERTIFICATE|CERTIFICATION|INTERNSHIP|LANGUAGE|DECLARATION', line, re.IGNORECASE):
+                break
+            edu_lines.append(line)
+
+    if not edu_lines:
+        return "NO_COLLEGE"
+
+    education_section = ' '.join(edu_lines)
+
+    # 1. Try full college names
+    college_pattern = r"\b((?:[A-Z][A-Za-z&,\s.'-]{2,}\s){0,3}(University|College|Institute|Academy|Technology)(?:\s+of\s+[A-Z][A-Za-z]{2,})?)\b"
+    for match in re.finditer(college_pattern, education_section, flags=re.IGNORECASE):
+        return match_with_known_colleges(match.group(1).strip())
+
+    # 2. Try abbreviations (JNTUA, RGPV, etc.)
+    abbrev_pattern = r"(?:(?:from|at)\s+)?((?:[A-Z]\s*){2,}(?:[A-Za-z\s]{0,20}))"
+    for match in re.finditer(abbrev_pattern, education_section):
+        abbrev = match.group(1).strip()
+        abbrev_clean = ' '.join(abbrev.split())
+        if 2 <= len(abbrev_clean.replace(" ", "")) <= 15:
+            return match_with_known_colleges(abbrev_clean)
+
     return "NO_COLLEGE"
 
 
