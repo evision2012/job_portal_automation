@@ -1,11 +1,12 @@
 import os
 import pandas as pd
 import PyPDF2
+import re
+import json
 
 from mylib import city_by_states, is_same
 
 all_cities = [x for val in city_by_states.values() for x in val]
-all_cities = [x for x in all_cities if len(x)>3]
 
 
 
@@ -36,7 +37,28 @@ def extract_experience(text):
 
 
 
+# def extract_degree(text):
+   
+
+def load_degrees():
+    with open(r"D:\Evision Internship\Job_Portal_Automation\Data_Files\degree.json", "r", encoding="utf-8") as file:
+        degrees = json.load(file)
+    
+    # Filter only undergraduate degrees
+    return {deg for deg in degrees if re.search( r'\b(' \
+              r'B\.?\s?(Tech|Sc|E|Com|BA|Voc|CA|Pharma|Arch|BBA|BCA|BMS|BHM|BPT|Computer Application)' \
+              r'|' \
+              r'M\.?\s?(Tech|Sc|Com|CA|BA|MBA)' \
+              r')\b', deg, re.IGNORECASE)}
+
+degree_list = load_degrees()
+
 def extract_degree(text):
+    for degree in degree_list:
+        pattern = re.escape(degree)
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            return degree
     return "NO_DEGREE"
 
 
@@ -106,7 +128,8 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
                 "Under Graduation degree": extract_degree(text),
                 "UG Specialization": extract_stream(text),
                 "UG University/institute Name": extract_college(text),
-                "UG Graduation year": extract_graduation_year(text)
+                "UG Graduation year": extract_graduation_year(text),
+                "File Name":filename
             }])
 
             # Append new row to the existing DataFrame
@@ -121,7 +144,3 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
 # Run the function
 if __name__ == "__main__":
     process_resumes()
-
-
-
-
