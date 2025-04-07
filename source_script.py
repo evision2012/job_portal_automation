@@ -27,7 +27,11 @@ def extract_phone(text):
 
 
 def extract_city(text):
-    return "NO_CITY"
+   for city in all_cities:
+        if city.lower() in text.lower():
+            return city
+   return "NO_CITY"
+
 
 
 
