@@ -32,6 +32,9 @@ def extract_phone(text):
         r"\+91\s*\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4}",  # +91 (807) 438-5280 or +91 807-438-5280
         r"\b\d{2,5}[\s-]?\d{2,5}[\s-]?\d{1,5}\b",    #7559 8498 34  
         r'(\d\s?){10,12}',  # for 1 2 3 4 5 6 7 8 3 4
+        r'(\+91[\-\s]?)?[6-9]\d{9}',
+        r'\+?\d{1,3}[\s\-]?\d{2,5}[\s\-]?\d{2,5}[\s\-]?\d{2,5}',
+        r'\+?\d{1,3}[\s\-]?\d{2,5}[\s\-]?\d{2,5}[\s\-]?\d{2,5}',  
         r'(\d[\s\n]?){10,12}'  # for 1 in first line and 2 in second line
 
     ]
@@ -41,10 +44,12 @@ def extract_phone(text):
         if match:
             phone_number = match.group(0)
             phone_number = re.sub(r"[^\d]", "", phone_number)  # Remove non-numeric characters
-            phone_number = re.sub(r"^91", "", phone_number)     # Remove country code if present
-            if len(phone_number) > 10:
-                phone_number = phone_number[-10:]  # Only Extract last 10 digits    
-            return phone_number
+            #phone_number = re.sub(r"^91", "", phone_number)     # Remove country code if present
+            if len(phone_number) > 10 and phone_number.startswith("91"):
+                phone_number = phone_number[-10:]
+            
+            if len(phone_number) == 10:
+                return phone_number
     return "NO_PHONE"
 
 
