@@ -7,13 +7,42 @@ from mylib import city_by_states, is_same
 all_cities = [x for val in city_by_states.values() for x in val]
 all_cities = [x for x in all_cities if len(x)>3]
 
+def readit(file_path):
+    with open(file_path,'r',encoding='utf-8') as file:
+        content =file.read()
+    return content
+
+def writeit(file_path,content):
+    with open(file_path,'w',encoding='utf-8') as file:
+        file.write(content)
+    
+
+
+lst_word=readit('Data_Files/words.txt').split()
+lst_word=[x.lower() for x in lst_word]
 
 
 # Define stub functions to be implemented later
 
-def extract_name(text):
-    return "NO_NAME"
 
+
+def extract_name(text,file):
+    
+    count=0
+    lst_text=text.split()
+    for i in range(len(lst_text)):
+        word=lst_text[i].lower()
+        if '@' in word:
+            continue
+        if any(x.isdigit() for x in word):
+            continue
+        if word not in lst_word:
+            if '@' in lst_text[i+1]:
+                return lst_text[i]
+            if any(x.isdigit() for x in lst_text[i+1]):
+                return lst_text[i]
+            
+            return ' '.join(lst_text[i:i+2])
 
 
 def extract_email(text):
@@ -85,12 +114,16 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
         columns = [
             "Name", "Email ID", "Phone Number", "Current Location",
             "Total Experience", "Under Graduation degree",
-            "UG Specialization", "UG University/institute Name", "UG Graduation year"
+            "UG Specialization", "UG University/institute Name", "UG Graduation year", "PDF_Name"
         ]
         output_df = pd.DataFrame(columns=columns)
 
     # Process PDF files one by one
+    file_id=0
     for filename in os.listdir(folder_path):
+        file_id+=1
+        if file_id>10:
+            break
         if filename.lower().endswith(".pdf"):
             file_path = os.path.join(folder_path, filename)
             print(f"Processing: {file_path}")
@@ -98,7 +131,7 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
 
             # Prepare new row from extracted data
             new_row = pd.DataFrame([{
-                "Name": extract_name(text),
+                "Name": extract_name(text,filename),
                 "Email ID": extract_email(text),
                 "Phone Number": extract_phone(text),
                 "Current Location": extract_city(text),
@@ -106,7 +139,8 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
                 "Under Graduation degree": extract_degree(text),
                 "UG Specialization": extract_stream(text),
                 "UG University/institute Name": extract_college(text),
-                "UG Graduation year": extract_graduation_year(text)
+                "UG Graduation year": extract_graduation_year(text),
+                "PDF_Name": filename
             }])
 
             # Append new row to the existing DataFrame
