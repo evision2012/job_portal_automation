@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import PyPDF2
+import json
 
 from mylib import city_by_states, is_same
 
@@ -16,7 +17,31 @@ def readit(file_path):
 def writeit(file_path,content):
     with open(file_path,'w',encoding='utf-8') as file:
         file.write(content)
-    
+
+def load(file):
+    with open(file, 'r', encoding='utf-8') as f:
+        x = json.load(f)
+    return x
+
+lst=load('Data_Files/college.json')
+lst=[x.split() for x in lst]
+lst=[y for x in lst for y in x]
+lst=sorted(lst)
+start=lst[0]
+count=0
+dictionary={}
+
+for word in lst[1:]:
+    if word==start:
+        count+=1
+    else:
+        dictionary[start]=count
+        count=0
+        start=word
+common_words=[x for x in dictionary if dictionary[x]>=15]
+common_words=[x for x in common_words if len(x)>3]
+common_words=[x.lower() for x in common_words]
+
 
 
 lst_word=readit('Data_Files/words.txt').split()
@@ -155,7 +180,8 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
 
 # Run the function
 if __name__ == "__main__":
-    process_resumes()
+    pass
+    #process_resumes()
 
 
 
