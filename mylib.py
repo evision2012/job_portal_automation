@@ -39,6 +39,10 @@ def is_same(input_word, correct_word, threshold = 2):
 
 
 city_by_states = {
+    "Delhi NCR": ['Delhi', 'Gurugram', 'Noida', 'Greater Noida',
+                  'Ballabgarh', 'Bhiwadi', 'Manesar', 'Jhajjar',
+                  'Tauru', 'Khurja'],
+    
     "Andhra Pradesh": [
         "Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Kurnool",
         "Tirupati", "Rajahmundry", "Kakinada", "Kadapa", "Anantapur",
