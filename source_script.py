@@ -28,8 +28,12 @@ lst_word=[x.lower() for x in lst_word]
 def iswrong(word):
     if '@' in word:
         return True
-    if any(x.isdigit() for x in word):
-        return True
+    for x in word:
+        if x.isdigit():
+            return True
+        if not x.isalpha():
+            return True
+    
     return False
     
 
