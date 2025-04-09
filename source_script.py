@@ -72,7 +72,10 @@ def extract_name(text):
 
 
 def extract_email(text):
-    return "NO_EMAIL"
+    email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+    match = re.search(email_pattern, text, re.IGNORECASE)
+    return match.group() if match else "NO_EMAII"
+    #return "NO_EMAIL"
 
 
 
