@@ -31,7 +31,7 @@ def iswrong(word):
     if any(x.isdigit() for x in word):
         return True
     return False
-    
+#need more improvements    
 
 def extract_name(text):
     count=0
