@@ -171,7 +171,10 @@ def extract_experience(text):      #Anand
 
 
 def load_degrees():
-    with open(r"C:\Users\SIYA RAM\Desktop\Job_Portal_Automation\Job_Portal_Automation\Data_Files\degree.json", "r", encoding="utf-8") as file:
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # Current file directory
+    file_path = os.path.join(base_dir, "Data_Files", "degree.json")
+
+    with open(file_path, "r", encoding="utf-8") as file:
         degrees = json.load(file)
     
  
