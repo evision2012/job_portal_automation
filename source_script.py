@@ -207,9 +207,48 @@ def extract_college(text):
     
     return "NO_COLLEGE"
 
-def extract_graduation_year(text):        #ankit
+def extract_graduation_year(text): #ankit
+    pattern = r"""
+        (?:b\.?(?:tech|e|sc|com|a|arch)|be|bachelor|graduat|degree|ug|under\s?grad|      # UG degree-related keywords
+        college|institute|university|education|studies|course|program)                  # Institution-related words
+        .*?                                                                             # Match non-greedy in-between
+        (20[1-2][0-5])                                                                  # Match year (2015-2025)
+
+        |                                                                               # OR
+
+        (20[1-2][0-5])                                                                  # Match year (2015-2025)
+        (?=\s*(?:passed|completed|graduat|degree))                                      # Lookahead for education completion terms
+    """
+
+    # Search for matches using verbose mode for readability
+    matches = re.finditer(pattern, text, re.IGNORECASE | re.VERBOSE)
+
+    # Return the first matched year if found
+    for match in matches:
+        # Extract the first non-None matched group (since we have 2 optional groups)
+        year = next((group for group in match.groups() if group), None)
+        if year:
+            return year
+
+    # If no education-context year found, fallback to general 4-digit year search
+    fallback_years = re.findall(r"(20[1-2][0-5])", text)
+
+    # Go through all matched years and check if they are near school-related keywords
+    for year in fallback_years:
+        window = 30  # Number of characters to check around the year
+        index = text.find(year)
+
+        # Get a small text context (window) around the found year
+        context = text[max(0, index - window):index + window].lower()
+
+        # If the context does not mention school terms, consider it a valid UG year
+        if not re.search(r'class|10th|12th|xii|xi|x', context):
+            return year
+
+    # If no valid graduation year found
+    return "NO_YEAR"
     
-            return "NO_YEAR"
+            #return "NO_YEAR"
 
 
 
