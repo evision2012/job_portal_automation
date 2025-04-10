@@ -1,24 +1,61 @@
 import os
 import pandas as pd
 import PyPDF2
-import re
-from rapidfuzz import process
-
-import json
 
 from mylib import city_by_states, is_same
 
 all_cities = [x for val in city_by_states.values() for x in val]
+all_cities = [x for x in all_cities if len(x)>3]
 
 
+def readit(file_path):
+    with open(file_path,'r',encoding='utf-8') as file:
+        content =file.read()
+    return content
 
+def writeit(file_path,content):
+    with open(file_path,'w',encoding='utf-8') as file:
+        file.write(content)
+    
+
+
+lst_word=readit('Data_Files/words.txt').split()
+lst_word=[x.lower() for x in lst_word]
+
+new_word=['information','security','analyst']
 # Define stub functions to be implemented later
 
+def iswrong(word):
+    if '@' in word:
+        return True
+    if any(x.isdigit() for x in word):
+        return True
+    if '.' in word:
+        return True
+    if word in new_word:
+        return True
+    return False
+
+def ispresent(word):
+    return False
 
 
 def extract_name(text):
-    return "NO_NAME"
-
+    lst_text=text.split()
+    print(lst_text)
+    for i in range(len(lst_text)):
+        word=lst_text[i].lower()
+        print(word)
+        if iswrong(word):
+            continue
+        if word not in lst_word:
+            if iswrong(lst_text[i+1]):
+                return lst_text[i]
+            return ' '.join(lst_text[i:i+2])
+        else:
+            if ispresent(lst_text):
+                return ' '.join(lst_text[i:i+2])
+            return ' '.join(lst_text[i:i+2])
 
 
 def extract_email(text):
@@ -51,86 +88,13 @@ def extract_stream(text):
 
 
 
-
-
-
-
-college_keywords = [
-    "University", "College", "Institute", "Academy",
-    "Technology", "Polytechnic", "Faculty" ,"Academy"
-]
-
-def has_college_keyword(segment):
-    segment_lower = segment.lower()
-    for kw in college_keywords:
-        kw_lower = kw.lower()
-        if re.search(rf'\b{re.escape(kw_lower)}\b', segment_lower):
-            return True
-    return False
-
-def clean_segment(segment):
-    # Remove trailing punctuation and irrelevant words
-    segment = segment.strip().rstrip(".,;")
-    # Remove small connecting words at the start (e.g., "and", "in", "for")
-    segment = re.sub(r'^(and|in|for|at|of)\s+', '', segment, flags=re.IGNORECASE)
-    return segment
-
 def extract_college(text):
-    text = text.replace('\r', ' ').replace('\t', ' ').strip()
-    lines = [line.strip() for line in text.split('\n') if line.strip()]
-    
-    # Step 1: Prioritize lines with education-related keywords (case-insensitive)
-    education_keywords = ["education", "degree", "bachelor", "mba", "college", "diploma", "ssc", "hsc"]
-    prioritized_lines = []
-    other_lines = []
-    for line in lines:
-        line_lower = line.lower()
-        if any(kw in line_lower for kw in education_keywords):
-            prioritized_lines.append(line)
-        else:
-            other_lines.append(line)
-    
-    # Step 2: Split segments using pipes, commas, hyphens, etc.
-    for line in prioritized_lines + other_lines:
-        # Split by |, commas, hyphens, slashes
-        segments = re.split(r'[|,/–-]', line)
-        for segment in reversed(segments):
-            cleaned_segment = clean_segment(segment)
-            if has_college_keyword(cleaned_segment):
-                words = cleaned_segment.split()
-                if len(words) >= 2 and not words[0].lower() in {"and", "in", "for"}:
-                    return cleaned_segment
-    
-    # Step 3: Fallback for multiple keywords in a line
-    for line in prioritized_lines + other_lines:
-        cleaned_line = clean_segment(line)
-        count = 0
-        for kw in college_keywords:
-            if re.search(rf'\b{re.escape(kw.lower())}\b', cleaned_line.lower()):
-                count += 1
-                if count >= 2:
-                    return cleaned_line
-    
-    # Step 4: Check for single keyword with sufficient length
-    for line in prioritized_lines + other_lines:
-        cleaned_line = clean_segment(line)
-        if has_college_keyword(cleaned_line) and len(cleaned_line.split()) >= 3:
-            return cleaned_line
-    
     return "NO_COLLEGE"
-    
-
-
-
-
-
-
 
 
 
 def extract_graduation_year(text):
-    
-            return "NO_YEAR"
+    return "NO_YEAR"
 
 
 
@@ -150,7 +114,7 @@ def extract_pdf_text(file_path):
 
 
 
-def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
+def process_resumes(folder_path="resume", excel_path="report_students.xlsx"):
     # Ensure resume folder exists
     if not os.path.exists(folder_path):
         print(f"The folder '{folder_path}' does not exist.")
@@ -163,12 +127,16 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
         columns = [
             "Name", "Email ID", "Phone Number", "Current Location",
             "Total Experience", "Under Graduation degree",
-            "UG Specialization", "UG University/institute Name", "UG Graduation year"
+            "UG Specialization", "UG University/institute Name", "UG Graduation year",
+            "PDF_Name"
         ]
         output_df = pd.DataFrame(columns=columns)
 
     # Process PDF files one by one
+    file_id=0
     for filename in os.listdir(folder_path):
+        file_id+=1
+        if file_id>100: break
         if filename.lower().endswith(".pdf"):
             file_path = os.path.join(folder_path, filename)
             print(f"Processing: {file_path}")
@@ -176,19 +144,17 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
 
             # Prepare new row from extracted data
             new_row = pd.DataFrame([{
-    "File Name": filename,
-    "Name": extract_name(text),
-    "Email ID": extract_email(text),
-    "Phone Number": extract_phone(text),
-    "Current Location": extract_city(text),
-    "Total Experience": extract_experience(text),
-    "Under Graduation degree": extract_degree(text),
-    "UG Specialization": extract_stream(text),
-    "UG University/institute Name": extract_college(text),
-    "UG Graduation year": extract_graduation_year(text)
-    
-}])
-
+                "Name": extract_name(text),
+                "Email ID": extract_email(text),
+                "Phone Number": extract_phone(text),
+                "Current Location": extract_city(text),
+                "Total Experience": extract_experience(text),
+                "Under Graduation degree": extract_degree(text),
+                "UG Specialization": extract_stream(text),
+                "UG University/institute Name": extract_college(text),
+                "UG Graduation year": extract_graduation_year(text),
+                "PDF_Name": filename
+            }])
 
             # Append new row to the existing DataFrame
             output_df = pd.concat([output_df, new_row], ignore_index=True)
@@ -202,3 +168,7 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
 # Run the function
 if __name__ == "__main__":
     process_resumes()
+
+
+
+
