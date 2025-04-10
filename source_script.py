@@ -294,18 +294,17 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
 
             # Prepare new row from extracted data
             new_row = pd.DataFrame([{
-    "File Name": filename,
-    "Name": extract_name(text),
-    "Email ID": extract_email(text),
-    "Phone Number": extract_phone(text),
-    "Current Location": extract_city(text),
-    "Total Experience": extract_experience(text),
-    "Under Graduation degree": extract_degree(text),
-    "UG Specialization": extract_stream(text),
-    "UG University/institute Name": extract_college(text),
-    "UG Graduation year": extract_graduation_year(text)
-    
-}])
+            "File Name": filename,
+            "Name": extract_name(text),
+            "Email ID": extract_email(text),
+            "Phone Number": extract_phone(text),
+            "Current Location": extract_city(text),
+            "Total Experience": extract_experience(text),
+            "Under Graduation degree": extract_degree(text),
+            "UG Specialization": extract_stream(text),
+            "UG University/institute Name": extract_college(text),
+            "UG Graduation year": extract_graduation_year(text)
+            }])
 
 
             # Append new row to the existing DataFrame
