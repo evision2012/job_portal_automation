@@ -118,64 +118,77 @@ def extract_college(text):
             return cleaned_line
     
     return "NO_COLLEGE"
-    
-
-
-
-
 
 
 
 
 
 def extract_graduation_year(text):
-    """
-    Extracts UG graduation year from text using regex.
-    Returns year as string between 2015-2025, ignoring school years.
-    Returns "NO_YEAR" if no match found.
-    """
+    # Normalize text
+    text = text.replace('\r', '\n')
+    
+    # Define patterns to locate education section headers
+    education_headers = [
+        "education", "educational background", "academic qualifications", 
+        "education details", "academic profile", "qualifications"
+    ]
+    
+    # Define common section endings to stop at
+    section_enders = [
+        "experience", "skills", "projects", "certifications", "work experience",
+        "internship", "profile", "personal", "achievements", "summary"
+    ]
 
-    # Main regex pattern to find graduation year in context of UG education
-    pattern = r"""
-        (?:b\.?(?:tech|e|sc|com|a|arch)|be|bachelor|graduat|degree|ug|under\s?grad|      # UG degree-related keywords
-        college|institute|university|education|studies|course|program)                  # Institution-related words
-        .*?                                                                             # Match non-greedy in-between
-        (20[1-2][0-5])                                                                  # Match year (2015-2025)
+    # Split text into lines
+    lines = text.split('\n')
+    lines = [line.strip() for line in lines if line.strip()]
 
-        |                                                                               # OR
+    # Find education section start
+    edu_start = -1
+    for idx, line in enumerate(lines):
+        if any(header in line.lower() for header in education_headers):
+            edu_start = idx
+            break
+    
+    if edu_start == -1:
+        return "NO_YEAR"
+    
+    # Scan from education section until next major section
+    edu_lines = []
+    for idx in range(edu_start + 1, len(lines)):
+        line_lower = lines[idx].lower()
+        if any(ender in line_lower for ender in section_enders):
+            break
+        edu_lines.append(lines[idx])
 
-        (20[1-2][0-5])                                                                  # Match year (2015-2025)
-        (?=\s*(?:passed|completed|graduat|degree))                                      # Lookahead for education completion terms
-    """
+    # Combine education lines into one text block
+    edu_text = " ".join(edu_lines)
 
-    # Search for matches using verbose mode for readability
-    matches = re.finditer(pattern, text, re.IGNORECASE | re.VERBOSE)
+    # Find all 4-digit years in the text
+    years = re.findall(r'\b(20[1-2][0-9])\b', edu_text)
 
-    # Return the first matched year if found
-    for match in matches:
-        # Extract the first non-None matched group (since we have 2 optional groups)
-        year = next((group for group in match.groups() if group), None)
-        if year:
-            return year
+    # Filter only years in 2015–2025 range
+    valid_years = [year for year in years if 2015 <= int(year) <= 2025]
 
-    # If no education-context year found, fallback to general 4-digit year search
-    fallback_years = re.findall(r"(20[1-2][0-5])", text)
+    # Exclude 10th/12th lines
+    filtered_years = []
+    for line in edu_lines:
+        if any(x in line.lower() for x in ["10", "x", "ssc", "cbse", "hsc", "12", "xii"]):
+            continue
+        found_years = re.findall(r'\b(20[1-2][0-9])\b', line)
+        for y in found_years:
+            if 2015 <= int(y) <= 2025:
+                filtered_years.append(y)
 
-    # Go through all matched years and check if they are near school-related keywords
-    for year in fallback_years:
-        window = 30  # Number of characters to check around the year
-        index = text.find(year)
+    # Choose the last matching year assuming UG is mentioned after 10th/12th
+    if filtered_years:
+        return max(filtered_years)  # latest year
 
-        # Get a small text context (window) around the found year
-        context = text[max(0, index - window):index + window].lower()
+    # Fallback to any valid year found
+    if valid_years:
+        return max(valid_years)
 
-        # If the context does not mention school terms, consider it a valid UG year
-        if not re.search(r'class|10th|12th|xii|xi|x', context):
-            return year
-
-    # If no valid graduation year found
     return "NO_YEAR"
-
 
 
 def extract_pdf_text(file_path):
