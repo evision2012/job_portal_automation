@@ -48,7 +48,7 @@ def extract_city(text):
 
 
 def extract_experience(text):
-    return "NO_EXPERIENCE"
+    return "EXPERIENCE CHANGE"
 
 
 
