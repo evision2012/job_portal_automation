@@ -48,7 +48,30 @@ def extract_city(text):
 
 
 def extract_experience(text):
-    return "EXPERIENCE CHANGE"
+    experience_keywords = [
+        'experience', 'experienced',
+        'intern', 'company', 'employment', 'currently working'
+    ]
+
+    text_lower = text.lower()
+
+    for word in experience_keywords:
+        if word in text_lower:
+            return "Experienced"
+
+    # Check for date patterns like "Jan 2020", "March 2021", etc.
+    date_pattern = r'\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*[\s\-.,]*\d{4}'
+    matches = re.findall(date_pattern, text_lower)
+
+    if len(matches) >= 2:
+        return "Experienced"
+
+    # Check for fresher keywords
+    if 'fresher' in text_lower or 'no work experience' in text_lower:
+        return "Fresher"
+
+    return "Fresher"
+    #return "EXPERIENCE CHANGE"
 
 
 
