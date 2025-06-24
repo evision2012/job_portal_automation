@@ -134,7 +134,7 @@ def process_resumes(folder_path="Resumes", excel_path="report_students.xlsx"):
 
 
 
-# Run the function
+# Run the function 
 if __name__ == "__main__":
     pass
     #process_resumes()
